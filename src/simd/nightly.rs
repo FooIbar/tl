@@ -24,7 +24,7 @@ pub fn find(haystack: &[u8], needle: u8) -> Option<usize> {
         unsafe { ptr::copy_nonoverlapping(ptr.add(i), bytes.as_mut_ptr(), 16) };
 
         let bytes = u8x16::from_array(bytes);
-        let eq = bytes.simd_eq(needle16).to_int();
+        let eq = bytes.simd_eq(needle16).to_simd();
         let num = unsafe { std::mem::transmute::<Simd<i8, 16>, u128>(eq) };
         if num != 0 {
             return Some(i + (num.trailing_zeros() >> 3) as usize);
@@ -66,7 +66,7 @@ pub fn find4(haystack: &[u8], needle: [u8; 4]) -> Option<usize> {
         let eq2 = bytes.simd_eq(needle16b);
         let eq3 = bytes.simd_eq(needle16c);
         let eq4 = bytes.simd_eq(needle16d);
-        let or = (eq1 | eq2 | eq3 | eq4).to_int();
+        let or = (eq1 | eq2 | eq3 | eq4).to_simd();
         let num = unsafe { std::mem::transmute::<i8x16, u128>(or) };
         if num != 0 {
             return Some(i + (num.trailing_zeros() >> 3) as usize);
@@ -124,7 +124,7 @@ pub fn search_non_ident(haystack: &[u8]) -> Option<usize> {
         let eq_underscore = bytes.simd_eq(needle_underscore);
         let symbol = eq_minus | eq_underscore;
 
-        let or = !(digit | lowercase | uppercase | symbol).to_int();
+        let or = !(digit | lowercase | uppercase | symbol).to_simd();
 
         let num = unsafe { std::mem::transmute::<i8x16, u128>(or) };
         if num != 0 {
